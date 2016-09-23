@@ -1,0 +1,21 @@
+{
+  "name": "family-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel-plugin-transform-async-to-generator": "^6.8.0",
+    "babel-register": "^6.14.0",
+    "kcors": "^2.1.1",
+    "koa": "^2.0.0-alpha.7",
+    "koa-convert": "^1.2.0",
+    "koa-logger": "^1.3.0",
+    "koa-router": "^7.0.1",
+    "kors": "^1.0.0"
+  }
+}
