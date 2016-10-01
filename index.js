@@ -1,44 +1,83 @@
 const Koa = require('koa');
 const convert = require('koa-convert');
+const bodyParser = require('koa-bodyparser');
 const logger = require('koa-logger');
 const cors = require('kcors');
 const router = require('koa-router')();
+const passport = require('passport');
+const config = require('./config');
+
+const users = require('./controllers/users');
+const medias = require('./controllers/medias');
+
+
+const jwt = function(req, res, next) {
+  passport.authenticate('jwt', {session: false})(req, res, next);
+};
+
+const datastore = require('@google-cloud/datastore')({
+  projectId: config.gcp_project_id,
+  keyFilename: config.gcp_key_filename,
+  apiEndpoint: 'localhost:8540' // local test
+});
+
+
+
 
 const app = new Koa();
+var key = datastore.key(['Product', 'Computer']);
+datastore.get(key, function(err, entity) {
+  console.log(err || entity);
+});
+
+// Save data to Datastore.
+var blogPostData = {
+  title: 'How to make the perfect homemade pasta',
+  author: 'Andrew Chilton',
+  isDraft: true
+};
+var query = datastore.createQuery('BlogPost')
+  .order('title', {
+    descending: true
+  });
+datastore.runQuery(query, function (err, tasks) {
+  if (!err) {
+    // Task entities found.
+    console.log(tasks)
+  }
+});
+var blogPostKey = datastore.key('BlogPost');
+console.log(blogPostKey)
+console.log(blogPostData)
+datastore.upsert({
+  key: blogPostKey,
+  data: blogPostData
+}, function(err) {
+  // `blogPostKey` has been updated with an ID so you can do more operations
+  // with it, such as an update.
+  blogPostData.isDraft = false;
+
+  datastore.upsert({
+    key: blogPostKey,
+    data: blogPostData
+  }, function(err) {
+    if (!err) {
+      // The blog post is now published!
+    }
+  });
+});
+
+
+
 
 router
-  .get('/', (ctx, next) => {
-    ctx.body = 'hello';
-  })
-  .get('/api/foo', (ctx, next) => {
-    ctx.body = 'hello 2';
-  })
-  .get('/api/medias', (ctx, next) => {
-    ctx.body = [
-        {id: 1, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample04&ac=qsampleac', width: 602, height: 400},
-        {id: 2, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample09&ac=qsampleac', width: 400, height: 617},
-        {id: 3, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample07&ac=qsampleac', width: 602, height: 400},
-        {id: 4, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample01&ac=qsampleac', width: 597, height: 400},
-        {id: 5, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample17&ac=qsampleac', width: 597, height: 400},
-        {id: 6, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample18&ac=qsampleac', width: 533, height: 400},
-        {id: 7, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample24&ac=qsampleac', width: 766, height: 150},
-        {id: 8, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample14&ac=qsampleac', width: 653, height: 400},
-        {id: 9, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample06&ac=qsampleac', width: 602, height: 400},
-        {id: 10, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample23&ac=qsampleac', width: 606, height: 400},
-        {id: 11, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample03&ac=qsampleac', width: 597, height: 400},
-        {id: 12, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample10&ac=qsampleac', width: 400, height: 597},
-        {id: 13, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample02&ac=qsampleac', width: 602, height: 400},
-        {id: 14, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample21&ac=qsampleac', width: 533, height: 400},
-        {id: 15, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample05&ac=qsampleac', width: 612, height: 400},
-        {id: 16, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample11&ac=qsampleac', width: 547, height: 400},
-        {id: 17, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample16&ac=qsampleac', width: 400, height: 597},
-        {id: 18, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample22&ac=qsampleac', width: 533, height: 400},
-        {id: 19, src: 'http://192.168.1.108:8080/photo/p/api/thumb.php?f=sample08&ac=qsampleac', width: 597, height: 400}
-    ];
-  });
+  .post('/api/auth', users.auth)
+  .get('/api/medias/upload_url', medias.getUploadUrl)
+  .get('/api/medias', medias.get);
 
+app.use(bodyParser());
 app.use(cors());
 app.use(convert(logger()))
 app.use(router.routes())
 app.use(router.allowedMethods());
-app.listen(4000);
+app.listen(config.port);

@@ -4,18 +4,25 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index",
+    "deploy": "gcloud app deploy --project family-144002"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "babel-plugin-transform-async-to-generator": "^6.8.0",
     "babel-register": "^6.14.0",
+    "google-cloud": "^0.40.0",
+    "jsonwebtoken": "^7.1.9",
     "kcors": "^2.1.1",
     "koa": "^2.0.0-alpha.7",
+    "koa-bodyparser": "^3.2.0",
     "koa-convert": "^1.2.0",
     "koa-logger": "^1.3.0",
     "koa-router": "^7.0.1",
-    "kors": "^1.0.0"
+    "kors": "^1.0.0",
+    "node-fetch": "^1.6.3",
+    "passport": "^0.3.2"
   }
 }
