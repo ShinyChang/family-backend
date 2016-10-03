@@ -38,6 +38,7 @@ exports.get = function(ctx, next) {
  */
 exports.getUploadUrl = function(ctx, next) {
   return new Promise((resolve, reject) => {
+    // name, size, take_at, type, width, height
     const filename = 'foo.png';
     bucket.file(filename).getSignedUrl({
       action: 'write',
